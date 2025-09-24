@@ -78,3 +78,4 @@ Csound is released under the LGPL. By bundling these binaries you agree to the
 terms of the upstream license. Refer to the
 [Csound license overview](https://csound.com/docs/licensing.html) for complete
 information before redistributing the framework in your own products.
+
