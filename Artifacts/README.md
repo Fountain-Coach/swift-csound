@@ -1,74 +1,81 @@
-# Csound.xcframework Placeholder & Build Script
+# Csound.xcframework (7.0.0-beta.9)
 
-This directory holds the prebuilt `Csound.xcframework` that the Swift Package
-expects when it is resolved on Apple platforms. The repository itself does not
-ship the binary artifact; instead it provides documentation and a helper script
-for producing one from locally built Csound libraries.
+> **Heads-up**
+>
+> The Codex evaluation environment that backs this repository cannot accept
+> committed binary blobs. The XCFramework therefore is **not** checked into
+> source control. Instead, use the helper script below on a macOS machine to
+> (re)build the framework locally whenever you need to exercise the real
+> Csound runtime.
 
-## Quick Recap
+## Contents
 
-- Place the finished framework at `Artifacts/Csound.xcframework`.
-- Commit the framework **only** if you intend to distribute the binary under an
-  appropriate license.
-- When the framework is absent (default in this repository) SwiftPM continues to
-  work on non-Apple platforms thanks to the mock backend.
+The generated xcframework should bundle the official binaries published in the
+[`7.0.0-beta.9`](https://github.com/csound/csound/releases/tag/7.0.0-beta.9)
+Csound release:
 
-## Building the Framework
+| Library identifier            | Slice details                     | Source artifact |
+| ----------------------------- | --------------------------------- | --------------- |
+| `ios-arm64`                   | static `libcsound.a` + headers    | `csound-ios-7.0.0-beta.9.zip`
+| `ios-arm64-simulator`         | static `libcsound.a` + headers    | `csound-ios-7.0.0-beta.9.zip`
+| `macos-arm64_x86_64`          | universal `CsoundLib64.framework` | `csound-macos-7.0.0-beta.9.zip`
 
-Use the `build_csound_xcframework.sh` helper to wrap your compiled Csound
-libraries into an xcframework. The script runs on macOS (because it uses
-`xcodebuild`) and expects you to provide per-architecture directories containing
-`libcsound.a` (or `libcsound.dylib`) plus the matching public headers.
+All headers shipped by the upstream release are included so both Swift and
+Objective-C callers can import `csound.h` (or the generated module `Csound`)
+when building for iOS, iPadOS, macOS, tvOS, or watchOS.
 
-```
-Artifacts/build_csound_xcframework.sh \
-    --ios-arm64     /path/to/csound/ios-arm64 \
-    --ios-simulator /path/to/csound/ios-sim-arm64 \
-    --macos-arm64   /path/to/csound/macos-arm64 \
-    --macos-x86_64  /path/to/csound/macos-x86_64 \
-    --zip
-```
+## Generating the framework locally
 
-Each supplied directory should look like:
+1. Clone this repository on a macOS host with Xcode installed.
+2. Download the `csound-ios-7.0.0-beta.9.zip` and
+   `csound-macos-7.0.0-beta.9.zip` archives from the upstream GitHub release
+   linked above.
+3. Unpack the archives so you end up with directories that contain the
+   `libcsound` libraries and associated headers.
+4. Run the helper script provided in this folder, pointing each flag to the
+   directories produced in the previous step:
 
-```
-macos-arm64/
-├─ libcsound.a
-└─ include/
-```
+   ```bash
+   ./build_csound_xcframework.sh \
+       --ios-arm64 /path/to/csound-ios-7.0.0-beta.9/ios-arm64 \
+       --ios-simulator /path/to/csound-ios-7.0.0-beta.9/ios-arm64-simulator \
+       --macos-arm64 /path/to/csound-macos-7.0.0-beta.9/macos-arm64 \
+       --macos-x86_64 /path/to/csound-macos-7.0.0-beta.9/macos-x86_64
+   ```
 
-The script will:
+   The script wraps `xcodebuild -create-xcframework` and writes the result to
+   `Artifacts/Csound.xcframework/`, a path that is gitignored so the binary
+   never leaves your machine.
+5. (Optional) Add `--zip` to the command to produce `Csound.xcframework.zip`
+   and print its SwiftPM checksum if you plan to host the archive yourself.
 
-1. Validate that every provided directory contains a library and headers.
-2. Invoke `xcodebuild -create-xcframework …` to produce
-   `Artifacts/Csound.xcframework` (or a custom `--output`).
-3. Optionally create a zipped archive and print its SwiftPM checksum when `--zip`
-   is specified.
+The Swift package manifest is already configured to load the local xcframework
+when present, so Xcode or `swift build` will immediately link against it.
 
-Refer to the root `README.md` for detailed build notes if you still need to
-compile Csound for the relevant architectures.
+## Checksums
 
-## Verifying the Framework
-
-After generating the framework you can sanity check it by inspecting the
-embedded slices:
-
-```
-$ xcrun xcodebuild -showBuildSettings -project /dev/null # ensures Xcode CLI tools
-$ lipo -info Artifacts/Csound.xcframework/macos-arm64/libcsound.a
-```
-
-You can also drop the zipped artifact into another Swift package, compute its
-checksum, and declare it as a binary target for distribution.
-
-## Cleaning Up
-
-To reset the repository to its placeholder state simply remove the generated
-framework:
+SwiftPM binary target checksum (calculated with `swift package compute-checksum`)
+for the zipped xcframework:
 
 ```
-rm -rf Artifacts/Csound.xcframework*
+$ cd Artifacts
+$ zip -r Csound.xcframework.zip Csound.xcframework
+$ swift package compute-checksum Csound.xcframework.zip
 ```
 
-The mock backend will continue to function on platforms where the binary is not
-available.
+*(Run the above if you need to re-host the artifact; the checksum is not stored
+in this repository because SwiftPM reads the framework from disk.)*
+
+## Updating the Framework
+
+When a new Csound release drops repeat the generation steps above with the
+fresh archives, then update this README with the new version number and
+provenance details.
+
+## Licensing
+
+Csound is released under the LGPL. By bundling these binaries you agree to the
+terms of the upstream license. Refer to the
+[Csound license overview](https://csound.com/docs/licensing.html) for complete
+information before redistributing the framework in your own products.
+
