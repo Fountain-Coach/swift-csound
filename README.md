@@ -61,15 +61,21 @@ In your target, depend on **SPManager** (required) and **SPCsoundBackend** (opti
 
 ```swift
 // Package.swift (excerpt)
-.products: [
-  .library(name: "SPManager", targets: ["SPManager"]),
-  .library(name: "SPCsoundBackend", targets: ["SPCsoundBackend"]),
-]
+.package(url: "https://github.com/Fountain-Coach/fountaincoach-swift-csound.git", from: "1.0.0"),
+
+.target(
+    name: "App",
+    dependencies: [
+        .product(name: "SPManager", package: "fountaincoach-swift-csound"),
+        .product(name: "SPCsoundBackend", package: "fountaincoach-swift-csound")
+    ]
+)
 ```
 
-If you ship a prebuilt Csound, add a `binaryTarget` and make `SPCsoundBackend`
-depend on it. If you use a system install (macOS dev only), declare a
-`systemLibrary` target that points to Csound headers and libs.
+The package manifest automatically wires the `SPCsoundBackend` target to a
+prebuilt `Csound.xcframework` when the package is resolved on Apple platforms.
+When developing on Linux the target falls back to a stub backend that throws so
+that the package continues to load without the binary artifact.
 
 ---
 
@@ -116,12 +122,27 @@ try await manager.setControl(id: session, "freq", value: 440)
 ## Building/Linking Csound
 
 ### Option A: Prebuilt `Csound.xcframework` (recommended for iOS/macOS release)
-1. Build Csound per-arch and per-SDK with CMake.
-2. Create the xcframework:
+
+The repository expects a prebuilt xcframework to be available at
+`Artifacts/Csound.xcframework`. The directory ships with a `README` placeholder
+and is ignored on Linux so that the SwiftPM manifest stays resolvable. To build
+the xcframework:
+
+1. Configure and build Csound per architecture and SDK using CMake.
+2. Package the static libraries and headers into an xcframework:
+
    ```bash
-   xcodebuild -create-xcframework      -library ios/arm64/libcsound.a -headers ios/arm64/include      -library iossim/arm64/libcsound.a -headers iossim/arm64/include      -library macos/arm64/libcsound.a -headers macos/arm64/include      -library macos/x86_64/libcsound.a -headers macos/x86_64/include      -output Csound.xcframework
+   xcodebuild -create-xcframework \
+     -library ios/arm64/libcsound.a -headers ios/arm64/include \
+     -library iossim/arm64/libcsound.a -headers iossim/arm64/include \
+     -library macos/arm64/libcsound.a -headers macos/arm64/include \
+     -library macos/x86_64/libcsound.a -headers macos/x86_64/include \
+     -output Csound.xcframework
    ```
-3. Add a `binaryTarget` into this package and reference it from `SPCsoundBackend`.
+3. Drop the resulting `Csound.xcframework` into `Artifacts/` before resolving the
+   package in Xcode or SwiftPM.
+4. The `SPCsoundBackend` target automatically links the binary and exposes a
+   Swift-friendly API for the render lifecycle.
 
 ### Option B: System install (macOS development)
 - `brew install csound`
