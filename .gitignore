@@ -1,0 +1,61 @@
+# macOS
+.DS_Store
+.AppleDouble
+.Trashes
+*.swp
+
+# Xcode
+build/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# CocoaPods / Carthage (not used, but ignore if present)
+Pods/
+Cartfile.resolved
+Carthage/
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# Env / secrets
+.env
+*.pem
+*.key
+*.crt
+
+# Logs / artifacts
+*.log
+*.trace
+*.xcresult
+
+# LV2 / CMake build outputs
+LV2/build/
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+Makefile
+*.lv2/*.so
+*.lv2/*.dll
+*.lv2/*.dylib
+
+# XCFrameworks and vendor blobs (optional to ignore if produced locally)
+*.xcframework.zip
+*.xcframework.checksum
+# keep committed if officially released
+# Csound.xcframework/
+
+# VSCode / JetBrains
+.vscode/
+.idea/
