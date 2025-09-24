@@ -53,8 +53,8 @@ Makefile
 # XCFrameworks and vendor blobs (optional to ignore if produced locally)
 *.xcframework.zip
 *.xcframework.checksum
-# keep committed if officially released
-# Csound.xcframework/
+# Generated locally because Codex cannot store binary blobs
+Artifacts/Csound.xcframework/
 
 # VSCode / JetBrains
 .vscode/
